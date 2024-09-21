@@ -136,3 +136,7 @@ This schema offers a robust structure for managing a Capstone viva examination s
 8. **Time Slot Management**
    - The `Time_slot` table enforces constraints on time and day to ensure that scheduled vivas are well-structured without time conflicts.
 
+### ER Model Screenshots
+
+<img src="./Project SQL/ER model.PNG" alt="Project" />
+
