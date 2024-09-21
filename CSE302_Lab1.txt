@@ -1,0 +1,105 @@
+-- Lab 01
+
+-- CSE302 Section 02
+
+-- Table creation with integrity constraints
+
+-- Create a table department with the following attributes
+-- i. dept_name (string) primary key
+-- ii. building (string) cannot be null
+-- iii. budget (number) cannot be negative, default 0
+
+CREATE TABLE department(
+	dept_name VARCHAR2(10),
+	building VARCHAR2(10) NOT NULL,
+	budget NUMBER(10,2) DEFAULT 0,
+	CONSTRAINT department_PK PRIMARY KEY (dept_name),
+	CONSTRAINT dept_check_budget CHECK (budget >= 0)
+);
+
+-- Create another table student which contains the following attributes
+
+-- i. id (string, 13 characters) primary key
+-- ii. name (string) NOT NULL
+-- iii. dept_name (string) foreign key referring to department 
+-- iv. tot_cred (number) must be in between 0 and 140
+-- v. nid (number) unique value
+
+CREATE TABLE student(
+   id VARCHAR2(13),
+   name VARCHAR2(10) NOT NULL,
+   dept_name VARCHAR2(10),
+   tot_cred NUMBER DEFAULT 0,
+   nid number,
+   PRIMARY KEY (id),
+   FOREIGN KEY (dept_name) REFERENCES department,
+   CHECK (tot_cred >= 0 AND tot_cred <= 140),
+   UNIQUE (nid)
+);
+
+
+-- Schema modification
+
+-- adding a new attribute 
+
+ALTER TABLE department ADD room_no NUMBER;
+
+-- deleting an existing attribute
+
+ALTER TABLE student DROP COLUMN nid;
+
+-- rename an existing attribute
+
+ALTER TABLE student RENAME COLUMN id TO student_id;
+
+-- modify the datatype of an existing attribute
+
+ALTER TABLE student MODIFY student_id NUMBER(10);
+
+-- rename a table
+
+ALTER TABLE student RENAME TO student_info;
+
+-- drop an existing constraint
+
+ALTER TABLE Department DROP CONSTRAINT DEPT_CHECK_BUDGET;
+
+-- add a new constraint
+
+ALTER TABLE Department ADD CONSTRAINT dept_check_budget_v2 CHECK (budget >= 10000 AND budget <= 100000);
+
+
+INSERT INTO Department VALUES ('CSE','Main',15000,640);
+INSERT INTO Department VALUES ('EEE','AB-3',25000,999);
+INSERT INTO Department VALUES ('ECE','AB-1',10001,433);
+INSERT INTO Department VALUES ('LAW','Main',30500,700);
+
+
+INSERT INTO Student_Info VALUES (1010101010,'Alice','CSE',95);
+INSERT INTO Student_Info VALUES (2013014011,'Bob','EEE',85);
+INSERT INTO Student_Info VALUES (3014015011,'Charlie','CSE',135);
+INSERT INTO Student_Info VALUES (4015016011,'Danny','ECE',50);
+INSERT INTO Student_Info VALUES (5016017011,'Elton','LAW',35);
+
+SELECT S.student_id, S.name
+FROM Student_info S, Department D
+WHERE S.dept_name = D.dept_name AND D.building = 'Main';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+

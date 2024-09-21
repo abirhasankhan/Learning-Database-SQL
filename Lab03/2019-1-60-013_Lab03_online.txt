@@ -1,0 +1,40 @@
+-- Table DOCTOR:
+CREATE TABLE doctor(
+doctorId NUMBER,
+doctorName VARCHAR2(20) NOT NULL,
+specialty VARCHAR2(15),
+PRIMARY KEY (doctorId)
+);
+
+-- Table PATIENT:
+CREATE TABLE patient(
+patientId NUMBER,
+patientName VARCHAR2(20) NOT NULL,
+patientAge NUMBER,
+patientContact VARCHAR2(20) NOT NULL,
+PRIMARY KEY (patientId)
+);
+
+-- Table VISIT:
+CREATE TABLE visit(
+visitId NUMBER,
+visitDate DATE NOT NULL,
+consultancyFee NUMBER NOT NULL,
+patientId NUMBER NOT NULL,
+doctorId NUMBER NOT NULL,
+CONSTRAINT patient_id FOREIGN KEY (patientId) REFERENCES patient (patientId),
+CONSTRAINT doctor_id FOREIGN KEY (doctorId) REFERENCES doctor (doctorId),
+PRIMARY KEY (visitId)
+);
+
+
+-- Table PRESCRIPTION:
+CREATE TABLE prescription(
+prescriptionId NUMBER,
+generalFindings VARCHAR2(30) NOT NULL,
+advice VARCHAR2(40),
+visitId NUMBER NOT NULL,
+FOREIGN KEY (visitId) REFERENCES visit (visitId),
+PRIMARY KEY (prescriptionId)
+);
+

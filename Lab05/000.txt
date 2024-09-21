@@ -1,0 +1,234 @@
+-- 1.
+-- a. without using subqueries
+SELECT C.*
+FROM Customer C, Depositor D, Account A, Branch B
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND (A.branch_name = B.branch_name) and customer_city = branch_city;
+
+-- b. using a subquery
+SELECT C.*
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND customer_city = All
+      (SELECT branch_city
+       FROM Branch B
+       WHERE A.branch_name = B.branch_name
+       );
+
+
+-- OR (using IN)
+SELECT C.*
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND customer_city IN
+      (SELECT branch_city
+       FROM Branch B
+       WHERE A.branch_name = B.branch_name
+       );
+
+
+-- 2.
+-- a. without using subqueries   
+SELECT C.*
+FROM Customer C, Borrower Br, Loan L, Branch B
+WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number) AND (L.branch_name = B.branch_name) and customer_city = branch_city;
+
+-- b. using a subquery
+SELECT C.*
+FROM Customer C, Borrower Br, Loan L
+WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number) AND customer_city = All
+      (SELECT branch_city
+       FROM Branch B
+       WHERE L.branch_name = B.branch_name
+       );
+
+
+-- OR (using IN)
+SELECT C.*
+FROM Customer C, Borrower Br, Loan L
+WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number) AND customer_city IN
+      (SELECT branch_city
+       FROM Branch B
+       WHERE L.branch_name = B.branch_name
+       );
+
+-- 3. 
+-- with having
+SELECT avg(balance) AS avg_balance, branch_city
+FROM Account A, Branch B
+WHERE A.branch_name = B.branch_name
+GROUP BY branch_city
+MINUS
+SELECT SUM(balance) AS total_balance, branch_city
+FROM Account A, Branch B
+WHERE A.branch_name = B.branch_name
+GROUP BY branch_city
+HAVING SUM(balance) < 1000;
+-- OR
+SELECT avg(balance) AS avg_balance, branch_city
+FROM Account A, Branch B
+WHERE A.branch_name = B.branch_name
+GROUP BY branch_city
+HAVING SUM(balance) >= 1000;
+
+-- without having
+SELECT avg_balance, branch_city
+FROM (
+      SELECT avg(balance) AS avg_balance, sum(balance) AS sum_balance, branch_city
+      FROM Account A, Branch B
+      WHERE A.branch_name = B.branch_name 
+      GROUP BY branch_city
+      )
+WHERE sum_balance >= 1000;
+
+
+-- 4.
+-- with having
+SELECT avg(amount) AS avg_amount, branch_city
+FROM Branch B, Loan L
+WHERE B.branch_name = L.branch_name
+GROUP BY branch_city
+MINUS
+SELECT avg(amount) AS avg_amount, branch_city
+FROM Branch B, Loan L
+WHERE B.branch_name = L.branch_name
+GROUP BY branch_city
+HAVING avg(amount) < 1500;
+-- OR
+SELECT avg(amount) AS avg_amount, branch_city
+FROM Branch B, Loan L
+WHERE B.branch_name = L.branch_name
+GROUP BY branch_city
+HAVING avg(amount) >= 1500;
+
+-- without having
+SELECT avg_amount, branch_city
+FROM (SELECT avg(amount) AS avg_amount, branch_city
+      FROM Branch B, Loan L
+      WHERE B.branch_name = L.branch_name
+      GROUP BY branch_city)
+WHERE avg_amount >= 1500;
+
+
+-- 5.
+-- with all
+SELECT C.*
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND balance >= All
+      (SELECT balance
+       FROM Account);
+
+-- without all
+SELECT C.*
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND balance =  
+      (SELECT max(balance)
+       FROM Account);
+
+
+-- 6.
+-- with all
+SELECT C.*, amount
+FROM Customer C, Borrower Br, Loan L
+WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number) AND amount <= All
+      (SELECT amount
+       FROM Loan);
+
+-- without all
+SELECT C.*, amount
+FROM Customer C, Borrower Br, Loan L
+WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number) AND amount =
+      (SELECT min(amount)
+       FROM Loan);
+
+
+-- 7.
+-- IN
+SELECT DISTINCT B.branch_name, B.branch_city
+FROM Branch B, Account A
+WHERE (A.branch_name = B.branch_name) AND 
+      (B.branch_name, B.branch_city) IN (SELECT DISTINCT B.branch_name, B.branch_city
+                                         FROM Loan L
+                                         WHERE (L.branch_name = B.branch_name));
+
+-- EXISTS
+SELECT DISTINCT B.branch_name, B.branch_city
+FROM Branch B, Account A
+WHERE (A.branch_name = B.branch_name) AND 
+      EXISTS (SELECT DISTINCT B.branch_name, B.branch_city
+                 FROM Loan L
+                 WHERE (L.branch_name = B.branch_name));
+
+
+-- 8.
+-- NOT IN
+SELECT DISTINCT C.customer_name, C.customer_city
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND
+      (C.customer_name, C.customer_city) NOT IN (SELECT DISTINCT C.customer_name, C.customer_city
+                                             FROM Borrower Br, Loan L
+                                             WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number));
+
+-- NOT EXISTS
+SELECT DISTINCT C.customer_name, C.customer_city
+FROM Customer C, Depositor D, Account A
+WHERE (C.customer_name = D.customer_name AND D.account_number = A.account_number) AND
+      NOT EXISTS (SELECT DISTINCT C.customer_name, C.customer_city
+                  FROM Borrower Br, Loan L
+                  WHERE (C.customer_name = Br.customer_name AND Br.loan_number = L.loan_number));
+
+
+-- 9.
+-- without with
+SELECT t1.branch_name, t1.total_balance, t3.avg_total_balance
+FROM (SELECT B.branch_name, sum(balance) AS total_balance
+      FROM Branch B, Account A
+      WHERE (B.branch_name = A.branch_name)
+      GROUP BY B.branch_name) t1 , 
+     (SELECT avg(total_balance) AS avg_total_balance
+      FROM (SELECT B.branch_name,  sum(balance) AS total_balance
+            FROM Branch B, Account A
+            WHERE (B.branch_name = A.branch_name)
+            GROUP BY B.branch_name) t2
+      ) t3
+WHERE t1.total_balance > t3.avg_total_balance;
+
+-- with
+WITH t1 AS
+     (SELECT B.branch_name, sum(balance) AS total_balance
+      FROM Branch B, Account A
+      WHERE (B.branch_name = A.branch_name)
+      GROUP BY B.branch_name) ,
+     t2 AS
+     (SELECT avg(total_balance) AS avg_total_balance
+      FROM t1)
+SELECT t1.branch_name,  t1.total_balance, t2.avg_total_balance
+FROM t1, t2
+WHERE t1.total_balance > t2.avg_total_balance;
+
+
+-- 10.
+-- without with
+SELECT t1.branch_name, t1.total_amount, t3.avg_total_amount
+FROM (SELECT B.branch_name, sum(amount) AS total_amount
+      FROM Branch B, Loan L
+      WHERE (B.branch_name = L.branch_name)
+      GROUP BY B.branch_name) t1 ,
+      (SELECT avg(total_amount) AS avg_total_amount
+       FROM (SELECT B.branch_name, sum(amount) AS total_amount
+             FROM Branch B, Loan L
+             WHERE (B.branch_name = L.branch_name)
+             GROUP BY B.branch_name) t2
+      ) t3
+WHERE t1.total_amount < t3.avg_total_amount;
+
+-- with   
+WITH t1 AS
+     (SELECT B.branch_name, sum(amount) AS total_amount
+      FROM Branch B, Loan L
+      WHERE B.branch_name = L.branch_name
+      GROUP BY B.branch_name) ,
+     t2 AS
+     (SELECT avg(total_amount) AS avg_total_amount
+      FROM t1)
+SELECT t1.branch_name, t1.total_amount, t2.avg_total_amount
+FROM t1,t2
+WHERE t1.total_amount < t2.avg_total_amount;
+
