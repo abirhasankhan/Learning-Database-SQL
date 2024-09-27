@@ -1,1 +1,8 @@
+# Specify SQL as the language for .sql files
 *.sql linguist-language=SQL
+
+# Ensure SQL files are considered source code
+*.sql linguist-vendored=false
+*.sql linguist-generated=false
+*.sql linguist-documentation=false
+
